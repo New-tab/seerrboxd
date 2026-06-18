@@ -22,7 +22,7 @@ describe('movie scraper', () => {
         <html>
           <body>
             <h1 class="primaryname">The Matrix</h1>
-            <div class="film-poster" data-film-id="12345">
+            <div class="film-poster" data-resolvable-poster-path="{&quot;postered&quot;:{&quot;uid&quot;:&quot;film:12345&quot;}}">
               <img src="poster.jpg" />
             </div>
             <a data-track-action="TMDB" href="https://www.themoviedb.org/movie/603">Link</a>
@@ -56,7 +56,7 @@ describe('movie scraper', () => {
         <html>
           <body>
             <h1 class="primaryname">Some TV Show</h1>
-            <div class="film-poster" data-film-id="99999">
+            <div class="film-poster" data-resolvable-poster-path="{&quot;postered&quot;:{&quot;uid&quot;:&quot;film:99999&quot;}}">
               <img src="poster.jpg" />
             </div>
             <a href="https://www.imdb.com/title/tt1234567/">IMDB Link</a>
@@ -80,7 +80,7 @@ describe('movie scraper', () => {
         <html>
           <body>
             <h1 class="primaryname">Obscure Film</h1>
-            <div class="film-poster" data-film-id="88888">
+            <div class="film-poster" data-resolvable-poster-path="{&quot;postered&quot;:{&quot;uid&quot;:&quot;film:88888&quot;}}">
               <img src="poster.jpg" />
             </div>
             <a data-track-action="TMDB" href="https://www.themoviedb.org/movie/456">TMDB Link</a>
@@ -104,7 +104,7 @@ describe('movie scraper', () => {
         <html>
           <body>
             <h1 class="primaryname">Future Film</h1>
-            <div class="film-poster" data-film-id="77777">
+            <div class="film-poster" data-resolvable-poster-path="{&quot;postered&quot;:{&quot;uid&quot;:&quot;film:77777&quot;}}">
               <img src="poster.jpg" />
             </div>
             <a data-track-action="TMDB" href="https://www.themoviedb.org/movie/789">TMDB Link</a>
@@ -149,7 +149,7 @@ describe('movie scraper', () => {
       });
 
       await expect(getMovie('/film/broken-film/')).rejects.toThrow(
-        'Could not find Letterboxd film ID'
+        'Failed to extract Letterboxd ID from HTML.'
       );
     });
 
@@ -158,7 +158,7 @@ describe('movie scraper', () => {
         <html>
           <body>
             <h1 class="primaryname">Test Movie</h1>
-            <div class="film-poster" data-film-id="11111">
+            <div class="film-poster" data-resolvable-poster-path="{&quot;postered&quot;:{&quot;uid&quot;:&quot;film:11111&quot;}}">
               <img src="poster.jpg" />
             </div>
           </body>
@@ -180,7 +180,7 @@ describe('movie scraper', () => {
         <html>
           <body>
             <h1 class="primaryname">TV Show</h1>
-            <div class="film-poster" data-film-id="22222">
+            <div class="film-poster" data-resolvable-poster-path="{&quot;postered&quot;:{&quot;uid&quot;:&quot;film:22222&quot;}}">
               <img src="poster.jpg" />
             </div>
             <a data-track-action="TMDB" href="https://www.themoviedb.org/tv/12345">TMDB TV Link</a>
@@ -203,7 +203,7 @@ describe('movie scraper', () => {
         <html>
           <body>
             <h1 class="primaryname">Movie</h1>
-            <div class="film-poster" data-film-id="33333">
+            <div class="film-poster" data-resolvable-poster-path="{&quot;postered&quot;:{&quot;uid&quot;:&quot;film:33333&quot;}}">
               <img src="poster.jpg" />
             </div>
             <a href="https://www.imdb.com/name/nm0000123/">IMDB Person Link</a>
@@ -226,7 +226,7 @@ describe('movie scraper', () => {
         <html>
           <body>
             <h1 class="primaryname">Movie</h1>
-            <div class="film-poster" data-film-id="44444">
+            <div class="film-poster" data-resolvable-poster-path="{&quot;postered&quot;:{&quot;uid&quot;:&quot;film:44444&quot;}}">
               <img src="poster.jpg" />
             </div>
             <span class="releasedate"><a href="/films/decade/2020s/">2020s</a></span>
