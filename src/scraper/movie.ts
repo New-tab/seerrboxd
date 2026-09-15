@@ -77,12 +77,36 @@ function extractImdbId($: cheerio.CheerioAPI): string|null {
 }
 
 function extractLetterboxdId($: cheerio.CheerioAPI): number {
+    // Classic markup: <div class="film-poster" data-film-id="12345">
     const filmId = $('.film-poster img').closest('[data-film-id]').attr('data-film-id');
-    if (!filmId) {
-        throw new Error('Could not find Letterboxd film ID');
+    if (filmId) {
+        return parseInt(filmId, 10);
     }
-    
-    return parseInt(filmId, 10);
+
+    // Since ~2026 the film page no longer carries data-film-id. The id lives in the React
+    // poster component as JSON: data-postered-identifier='{"lid":"29ui","uid":"film:51313",...}'
+    const postered = $('[data-postered-identifier]').first().attr('data-postered-identifier');
+    if (postered) {
+        try {
+            const uid: unknown = JSON.parse(postered).uid;
+            const match = typeof uid === 'string' ? uid.match(/^film:(\d+)$/) : null;
+            if (match) {
+                return parseInt(match[1], 10);
+            }
+        } catch {
+            // fall through to the last resort below
+        }
+    }
+
+    // Last resort: any data-item-uid / data-object-id of the form film:NNNN
+    const uidAttr = $('[data-item-uid^="film:"]').first().attr('data-item-uid')
+        ?? $('[data-object-id^="film:"]').first().attr('data-object-id');
+    const uidMatch = uidAttr?.match(/^film:(\d+)$/);
+    if (uidMatch) {
+        return parseInt(uidMatch[1], 10);
+    }
+
+    throw new Error('Could not find Letterboxd film ID');
 }
 
 function extractPublishedYear($: cheerio.CheerioAPI): number|null {

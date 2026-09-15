@@ -51,6 +51,54 @@ describe('movie scraper', () => {
       expect(global.fetch).toHaveBeenCalledWith('https://letterboxd.com/film/the-matrix/');
     });
 
+    it('should extract the film ID from the React poster JSON when data-film-id is absent (2026 markup)', async () => {
+      const mockHtml = `
+        <html>
+          <body>
+            <h1 class="primaryname">Duel</h1>
+            <div class="react-component" data-component-class="LazyPoster" data-item-slug="duel"
+                 data-postered-identifier="{&quot;lid&quot;:&quot;29ui&quot;,&quot;uid&quot;:&quot;film:51313&quot;,&quot;type&quot;:&quot;film&quot;}">
+              <div class="poster film-poster"><img src="poster.jpg" /></div>
+            </div>
+            <a data-track-action="TMDB" href="https://www.themoviedb.org/movie/839">Link</a>
+            <span class="releasedate"><a href="/films/year/1971/">1971</a></span>
+          </body>
+        </html>
+      `;
+
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        text: async () => mockHtml,
+      });
+
+      const result = await getMovie('/film/duel/');
+
+      expect(result.id).toBe(51313);
+      expect(result.tmdbId).toBe('839');
+      expect(result.publishedYear).toBe(1971);
+    });
+
+    it('should fall back to a data-item-uid attribute for the film ID', async () => {
+      const mockHtml = `
+        <html>
+          <body>
+            <h1 class="primaryname">Duel</h1>
+            <p class="poster-viewingdata" data-item-uid="film:51313"></p>
+            <a data-track-action="TMDB" href="https://www.themoviedb.org/movie/839">Link</a>
+          </body>
+        </html>
+      `;
+
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        text: async () => mockHtml,
+      });
+
+      const result = await getMovie('/film/duel/');
+
+      expect(result.id).toBe(51313);
+    });
+
     it('should handle missing TMDB ID gracefully', async () => {
       const mockHtml = `
         <html>
