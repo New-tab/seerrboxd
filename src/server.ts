@@ -1,7 +1,8 @@
 import express from 'express';
 import path from 'path';
 import { loadState, saveState } from './util/state';
-import { loadEvents } from './util/activity-log';
+import { loadEvents, ACTIVITY_LOG_MAX_LINES } from './util/activity-log';
+import { computeHealth } from './util/health';
 import env from './util/env';
 import logger from './util/logger';
 
@@ -14,9 +15,10 @@ export function createApp(runAllSources: () => Promise<void>): express.Express {
 
   app.get('/status', async (_req, res) => {
     try {
+      const health = computeHealth(await loadEvents(env.DATA_DIR, ACTIVITY_LOG_MAX_LINES), env.CHECK_INTERVAL_MINUTES);
       const state = await loadState(env.DATA_DIR);
       if (!state) {
-        res.json({ sources: {}, syncing: isSyncing, activeUrls: env.letterboxdUrls });
+        res.json({ sources: {}, syncing: isSyncing, activeUrls: env.letterboxdUrls, health });
         return;
       }
 
@@ -35,7 +37,7 @@ export function createApp(runAllSources: () => Promise<void>): express.Express {
         })
       );
 
-      res.json({ sources, syncing: isSyncing, activeUrls: env.letterboxdUrls });
+      res.json({ sources, syncing: isSyncing, activeUrls: env.letterboxdUrls, health });
     } catch (error) {
       res.status(500).json({ error: String(error) });
     }

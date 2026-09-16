@@ -153,6 +153,40 @@ describe('server', () => {
     await new Promise(resolve => setImmediate(resolve));
   });
 
+  it('GET /status reports health=false with no completed sync, true after a clean cycle', async () => {
+    const port = await startTestApp();
+    let r = await httpRequest(port, 'GET', '/status');
+    expect(r.status).toBe(200);
+    expect(r.body.health.healthy).toBe(false);
+    expect(r.body.health.reason).toMatch(/no completed sync/);
+
+    const { appendEvent } = require('./util/activity-log');
+    const now = Date.now();
+    await appendEvent(dataDir, { timestamp: new Date(now - 20_000).toISOString(), action: 'sync_started', message: 'Sync started' });
+    await appendEvent(dataDir, { timestamp: new Date(now - 10_000).toISOString(), action: 'sync_completed', message: 'Sync completed' });
+
+    r = await httpRequest(port, 'GET', '/status');
+    expect(r.body.health.healthy).toBe(true);
+    expect(r.body.health.lastCycleSourceErrors).toBe(0);
+    expect(r.body.health.staleAfterSeconds).toBe(3 * 10 * 60);
+  });
+
+  it('GET /status reports health=false when the last cycle failed to fetch a source', async () => {
+    const { appendEvent } = require('./util/activity-log');
+    const now = Date.now();
+    await appendEvent(dataDir, { timestamp: new Date(now - 20_000).toISOString(), action: 'sync_started', message: 'Sync started' });
+    await appendEvent(dataDir, {
+      timestamp: new Date(now - 15_000).toISOString(), action: 'error', mode: 'request',
+      sourceUrl: 'https://letterboxd.com/user/watchlist', message: 'Failed to fetch source: boom',
+    });
+    await appendEvent(dataDir, { timestamp: new Date(now - 10_000).toISOString(), action: 'sync_completed', message: 'Sync completed' });
+
+    const port = await startTestApp();
+    const { body } = await httpRequest(port, 'GET', '/status');
+    expect(body.health.healthy).toBe(false);
+    expect(body.health.lastCycleSourceErrors).toBe(1);
+  });
+
   it('GET /events returns empty events when log file does not exist', async () => {
     const port = await startTestApp();
     const { status, body } = await httpRequest(port, 'GET', '/events');
